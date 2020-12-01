@@ -1,0 +1,16 @@
+#cloud-config
+ssh_authorized_keys:
+- ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCqOJY/23/G9R3MCzZDMADGcexD0zdQm2J8a/Z8UcIrjBTycfuRry7d7+H1gXlpuA1zn3E1WWrWZl3SNAnhRxf6OO3DNf8ZrfWuO1/v9idkRLM9d/fLnsxc+l1ie4o305UshBP33H6Zkpx4kMdiyLvluF5JMJkyrvpmBGhxsLsMd3PfzE9cTM+OAhOXKszgluiTmgK4k6UGz6cYJpIJ5OieNsXsB5bndhEcs4p4YW85iv0hadxCCWGDtUDffR4AI7Rai0EMl+L4WfKSJKPY9L0f6NiprLzAIb9o7FLVKomhc9tDfu6V46Zqbc74NGsFulgYATB7BB7irswcYXiyp2X6KKkh0ul6JQbLiI5Qc9ghcCUDAGUNZ93Jiks1Sd9p1v6jTBrbwYBqUc2H0NzwdipEj9ReIiQPmS8qC+u2dwu221IJzW0BFqKdpjciVEjuNyciqr7b2ark06yp1Lp62WBkUjeC+bN5U8Y+k1S1j9YbodfbTE6bazyM66VchmgvVo8= loadmin@dmav001
+- ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDEft4lgAQwIAt1bjKmQhhHyGzeTT4HLs3r0iP9P5C7dcZ73XKAG2N7Iakmpyv8IwD6nTS1ytDagWHDN08nPxXN1nSaEh/SAeBaP7nckv++KRbVyAHyC7JwyDDaJw8NOZ/+u8USGLx3frIs2X1Z4YhnccPKpbINax9QHmV2+dcsjE+tVZ4RUxEW8zH/oGurLBxMDXmJ20Ln+P9/FxQpm3FLRnNZ3P41gc+Pp/Akqb7bLJp04Cgm6UOSEmSuvqwohmbsjX5B/KGn4guxcchSlAxKSxWZsaEfg3dGqh7Mv8WULHd+Ex4NVwHrngcgsP80YDCsl/hI1I29DscKxZ5liEfV5WHjtcxWPpQgz53qGhP0L1i7DnwlIOPWbSSwLV9dj6W5ugW6WvB9wDZF548FB8AReQ5dgmmsmC5cljpNKjlx6QR5VNalCBYDaAFH2bXu5huhVf8a8s2+lbCoEvQT4ilqbTTdAsr/RtEwa/k2bqw7S1B5l/F+Gj1VWN3ygOiNIcU= Dean.Taylor@dmav001.cmca.uwa.edu.au
+ssh_pwauth: no
+locale: en_AU.utf8
+timezone: Australia/Perth
+write_files:
+- path: /etc/issue
+  content: |
+    Ubuntu 20.04.1 LTS \n \l
+    IPv4: \4{enp0s3}
+    IPv6: \6{enp0s3}
+    
+preserve_hostname: false
+fqdn: mirc-ctp.cerds.uwa.edu.au

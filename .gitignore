@@ -1,0 +1,9 @@
+CTP-installer.jar
+*.ova
+*.iso
+*.log
+packer_*
+output_*
+.*.swp
+.state_*
+output-*

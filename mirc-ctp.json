@@ -1,0 +1,160 @@
+{
+  "variables": {
+    "build_version": "2020090901",
+    "JAVA_HOME": "/usr/local/openjdk-16",
+    "CTP_ROOT": "/JavaPrograms/CTP"
+  },
+
+  "provisioners": [
+    {
+      "type": "shell",
+      "inline": [
+        "echo -n 'Waiting for network...'",
+        "while ! $(systemctl --quiet is-enabled network-online.target); do sleep 1; done && echo 'FINISHED'",
+        "echo -n 'Waiting for cloud-init...'",
+        "cloud-init status --wait &>/dev/null && echo 'FINISHED'"
+      ],
+      "except": ["docker"]
+    },
+
+    { "type": "file", "source": "./docker-entrypoint.sh", "destination": "/docker-entrypoint.sh", "only": ["docker"] },
+    { "type": "file", "source": "./CTP-installer.jar", "destination": "/tmp/CTP-installer.jar" },
+    { "type": "file", "source": "./mirc-ctp.service", "destination": "/tmp/", "except": ["docker"] },
+
+    {
+      "type": "shell",
+      "inline": [
+        "mkdir -p /JavaPrograms /docker-entrypoint.d",
+        "cd /JavaPrograms && jar xf /tmp/CTP-installer.jar CTP",
+        "chown root:root /docker-entrypoint.sh && chmod +x /docker-entrypoint.sh",
+        "rm -f /tmp/CTP-installer.jar"
+      ],
+      "only": ["docker"]
+    },
+
+    { "type": "file", "source": "./docker-entrypoint.d/", "destination": "/docker-entrypoint.d", "only": ["docker"] },
+    { "type": "file", "source": "./config-serveronly.xml", "destination": "{{user `CTP_ROOT`}}/config.xml", "only": ["docker"] },
+    { "type": "file", "source": "./log4j.properties", "destination": "{{user `CTP_ROOT`}}/log4j.properties", "only": ["docker"] },
+
+    {
+      "type": "shell",
+      "environment_vars": [
+        "DEBIAN_FRONTEND=noninteractive"
+      ],
+      "inline": [
+        "apt-get update",
+        "apt-get -y install openjdk-8-jdk-headless",
+        "mkdir -p /JavaPrograms",
+        "cd /JavaPrograms && jar xf /tmp/CTP-installer.jar CTP",
+        "if [ -f /tmp/mirc-ctp.service ]; then",
+        "  cp /tmp/mirc-ctp.service /etc/systemd/system/mirc-ctp.service",
+        "  systemctl daemon-reload",
+        "  systemctl enable mirc-ctp.service",
+        "fi",
+        "# Setup default user for the image",
+        "rm -f /home/ubuntu/.ssh/authorized_keys",
+        "echo 'ubuntu:mircctp' |chpasswd",
+        "passwd --expire ubuntu",
+        "# Cleanup",
+        "apt-get -y clean",
+        "rm -f /tmp/CTP-installer.jar /tmp/mirc-ctp.service"
+      ],
+      "execute_command": "sudo env {{ .Vars }} {{ .Path }}",
+      "except": ["docker"]
+    },
+
+    {
+      "type": "shell",
+      "inline": [
+        "# Fix cloud image requirement for a serial COMs device",
+        "sed -i 's/ console=ttyS0//' /etc/default/grub.d/50-cloudimg-settings.cfg",
+        "update-grub"
+      ],
+      "execute_command": "sudo env {{ .Vars }} {{ .Path }}",
+      "only": ["vagrant", "virtualbox-ovf"]
+    },
+
+    {
+      "type": "shell",
+      "environment_vars": [
+        "DEBIAN_FRONTEND=noninteractive"
+      ],
+      "inline": [
+        "# Install Desktop requirements",
+        "apt-get update",
+        "apt-get -y install tasksel",
+        "tasksel install xubuntu-core",
+        "apt-get -y install firefox",
+        "apt-get -y clean",
+        "systemctl set-default multi-user.target"
+      ],
+      "execute_command": "sudo env {{ .Vars }} {{ .Path }}",
+      "except": ["docker"]
+    }
+  ],
+
+  "post-processors": [
+    [
+      {
+        "type": "docker-tag",
+        "repository": "localhost:32000/mirc-ctp",
+        "tag": "{{user `build_version`}}",
+        "only": [ "docker" ]
+      }
+    ]
+  ],
+
+  "builders": [
+    {
+      "type": "docker",
+      "image": "openjdk:16-slim",
+      "commit": true,
+      "changes": [
+        "CMD [\"java\", \"-jar\", \"libraries/CTP.jar\"]",
+        "ENTRYPOINT [\"/docker-entrypoint.sh\"]",
+        "LABEL maintainer=\"Dean Taylor <dean.taylor@uwa.edu.au>\"",
+        "VOLUME /data/xnat/archive /data/xnat/cache /data/xnat/prearchive {{user `xnat_home`}}/work {{user `xnat_home`}}/logs",
+        "WORKDIR /JavaPrograms/CTP"
+      ]
+    },
+    {
+      "type": "vagrant",
+      "source_path": "ubuntu/focal64",
+      "box_name": "mirc-ctp",
+      "provider": "virtualbox",
+      "communicator": "ssh"
+    },
+    {
+      "type": "virtualbox-ovf",
+      "checksum": "sha256:9341f54551ff3b7d307bcfa1113dbbe92d5ca7552a794c7696824d58a7567c0f",
+      "source_path": "./focal-server-cloudimg-amd64.ova",
+      "vm_name": "mirc-ctp-{{user `build_version`}}",
+      "vboxmanage": [
+        ["modifyvm","{{.Name}}","--memory","1024"],
+        ["modifyvm","{{.Name}}","--cpus","2"],
+        ["modifyvm","{{.Name}}","--uart1","0x3f8","4"],
+        ["modifyvm","{{.Name}}","--uartmode1","file","/dev/null"],
+        ["storageattach","{{.Name}}","--storagectl","IDE","--port","0","--device","0","--type","dvddrive","--medium","nocloud.iso"]
+      ],
+      "vboxmanage_post": [
+        ["storageattach","{{.Name}}","--storagectl","IDE","--port","0","--device","0","--type","dvddrive","--medium","emptydrive"],
+        ["modifyvm","{{.Name}}","--uartmode1","disconnected"],
+        ["modifyvm","{{.Name}}","--uart1","off"]
+      ],
+      "format": "ova",
+      "headless": true,
+      "ssh_username": "ubuntu",
+      "ssh_private_key_file": "./id_rsa",
+      "shutdown_command": "sudo systemctl poweroff",
+      "shutdown_timeout": "1m"
+    },
+    {
+      "type": "lxd",
+      "image": "ubuntu:focal",
+      "output_image": "mirc-ctp",
+      "publish_properties": {
+        "description": "RSNA - Medical Imaging Resource Center - Clinical Trial Processor"
+      }
+    }
+  ]
+}

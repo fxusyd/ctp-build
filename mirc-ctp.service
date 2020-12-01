@@ -1,0 +1,13 @@
+[Unit]
+Description=Clinical Trial Processor
+
+[Service]
+WorkingDirectory=/JavaPrograms/CTP
+ExecStart=java -Xms128m -Xmx256m -jar libraries/CTP.jar
+User=ubuntu
+Type=simple
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
