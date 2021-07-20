@@ -97,6 +97,12 @@
     [
       {
         "type": "docker-tag",
+        "repository": "ghcr.io/australian-imaging-service/mirc-ctp",
+        "tag": "{{user `build_version`}}",
+        "only": [ "docker" ]
+      },
+      {
+        "type": "docker-tag",
         "repository": "localhost:32000/mirc-ctp",
         "tag": "{{user `build_version`}}",
         "only": [ "docker" ]
@@ -113,6 +119,7 @@
         "CMD [\"java\", \"-jar\", \"libraries/CTP.jar\"]",
         "ENTRYPOINT [\"/docker-entrypoint.sh\"]",
         "LABEL maintainer=\"Dean Taylor <dean.taylor@uwa.edu.au>\"",
+        "LABEL org.opencontainers.image.source https://github.com/australian-imaging-service/ctp-build",
         "VOLUME /data/xnat/archive /data/xnat/cache /data/xnat/prearchive {{user `xnat_home`}}/work {{user `xnat_home`}}/logs",
         "WORKDIR /JavaPrograms/CTP"
       ]
