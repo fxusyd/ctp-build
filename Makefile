@@ -1,11 +1,19 @@
+tag = $(shell date +%Y%m%d)
+
+repo = ghcr.io/australian-imaging-service/mirc-ctp
+
 all : .state_ctp-docker .state_ctp-ovf .state_ctp-vagrant .state_ctp-lxd
 
 .state_ctp : mirc-ctp.json mirc-ctp.service src/CTP.tar.gz src/linux-x86_64 nocloud.iso
 	packer build mirc-ctp.json && touch state/mirc-ctp
 
-DE_FILES = $(shell find docker-entrypoint.d -type f)
-.state_ctp-docker : mirc-ctp.json CTP-installer.jar docker-entrypoint.sh docker-entrypoint.d $(DE_FILES)
-	packer build -only=docker mirc-ctp.json
+# DE_FILES = $(shell find docker-entrypoint.d -type f)
+# .state_ctp-docker : mirc-ctp.json CTP-installer.jar docker-entrypoint.sh docker-entrypoint.d $(DE_FILES)
+# 	packer build -only=docker mirc-ctp.json
+# 	touch .state_ctp-docker
+
+.state_ctp-docker: ctp.pkr.hcl CTP-installer.jar
+	packer build -var='repo=$(repo)' -var='tag=["$(tag)"]' ctp.pkr.hcl
 	touch .state_ctp-docker
 
 .state_ctp-ovf : mirc-ctp.json mirc-ctp.service CTP-installer.jar focal-server-cloudimg-amd64.ova nocloud.iso
