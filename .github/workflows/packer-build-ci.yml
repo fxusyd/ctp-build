@@ -52,7 +52,7 @@ jobs:
 
       - name: Build Artifacts
         run: |
-          [[ -f Makefile ]] && make
+          [[ -f Makefile ]] && make .state_ctp-docker
           CHANGED_FILES=$(git diff --name-only ${{github.event.before}}..${{github.event.after}} |grep '\.pkr\.hcl$')
           for FILE in "${CHANGED_FILES[@]}"; do
           packer validate -syntax-only "${FILE}"
