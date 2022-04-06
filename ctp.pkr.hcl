@@ -35,8 +35,7 @@ variable "tag" {
   type = list(string)
 }
 source "docker" "debian" {
-  image = "openjdk:18-jdk-slim-bullseye"
-  # image = "openjdk:8u322-jdk-slim-bullseye"
+  image = "openjdk:8u322-jdk-slim-bullseye"
   commit  = true
   changes = [
     "LABEL org.opencontainers.image.source https://github.com/australian-imaging-service/ctp-build",
