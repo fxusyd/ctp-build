@@ -6,3 +6,5 @@ output_*
 .*.swp
 .state_*
 output-*
+CTP-installer.jar
+latest-build

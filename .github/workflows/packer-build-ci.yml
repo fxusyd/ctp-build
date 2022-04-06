@@ -13,6 +13,8 @@ on:
     paths:
       - "**.pkr.hcl"
 
+  workflow_dispatch:
+
 env:
   REGISTRY: ghcr.io
 
@@ -26,8 +28,21 @@ jobs:
     name: packer
 
     steps:
+      - name: Docker metadata
+        id: meta
+        uses: docker/metadata-action@v3
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/ctp-build
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}},enable=${{ !startsWith(github.ref, 'refs/tags/v0.') }}
+            type=sha
+
       - name: Checkout Repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
@@ -60,3 +75,10 @@ jobs:
           done
         env:
           PACKER_LOG: 1
+
+      - name: Push docker image
+        uses: akhilerm/tag-push-action@v2.0.0
+        with:
+          src: localhost:32000/ctp-build:ci
+          dst: |
+            ${{ steps.meta.outputs.tags }}
