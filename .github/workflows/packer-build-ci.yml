@@ -75,7 +75,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v3
         with:
-          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/mirc-ctp
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/test
           tags: |
             type=ref,event=branch
             type=ref,event=pr
