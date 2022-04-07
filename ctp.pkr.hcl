@@ -1,7 +1,7 @@
 build {
   name = "ctp"
   sources = [
-    "source.docker.debian"
+    "source.docker.ctp"
   ]
   provisioner "file" {
     sources = [
@@ -22,19 +22,23 @@ build {
       "rm -f /tmp/CTP-installer.jar"
     ]    
   }
-  post-processor "docker-tag" {
-    repository = var.repo
-    tags = var.tag
+  post-processors {
+    post-processor "docker-tag" {
+      repository = var.repo
+      tags = var.tag
+    }
+    # post-processor "docker-push" {
+    #   only = ["docker.ctp"]
+    # }
   }
 }
 variable "repo" {
   type = string
-  # default = "ghcr.io/australian-imaging-service/mirc-ctp"
 }
 variable "tag" {
   type = list(string)
 }
-source "docker" "debian" {
+source "docker" "ctp" {
   image = "openjdk:8u322-jdk-slim-bullseye"
   commit  = true
   changes = [

@@ -1,5 +1,5 @@
 source = https://github.com/johnperry/CTP.git
-repo = ghcr.io/australian-imaging-service/mirc-ctp
+repo = localhost:32000/mirc-ctp
 tag = $(shell cat latest-build)
 
 all : .state_ctp-docker .state_ctp-ovf .state_ctp-vagrant .state_ctp-lxd
@@ -9,7 +9,6 @@ all : .state_ctp-docker .state_ctp-ovf .state_ctp-vagrant .state_ctp-lxd
 
 .state_ctp-docker: ctp.pkr.hcl CTP-installer.jar
 	packer build -var='repo=$(repo)' -var='tag=["$(tag)"]' ctp.pkr.hcl
-	# touch .state_ctp-docker
 	
 .state_ctp-ovf : mirc-ctp.json mirc-ctp.service CTP-installer.jar focal-server-cloudimg-amd64.ova nocloud.iso
 	packer build -only=virtualbox-ovf mirc-ctp.json
@@ -28,7 +27,7 @@ CTP-installer.jar:
 	# cp -r CTP-old CTP
 	cd CTP; \
 	version=$$(git log -n 1 --date=format:'%Y%m%d' products/CTP-installer.jar | grep Date | cut -d ' ' -f 4); \
-	echo $$version > ../latest-build
+	echo v$$version > ../latest-build
 	mv CTP/products/CTP-installer.jar ./
 	rm -fr CTP
 
